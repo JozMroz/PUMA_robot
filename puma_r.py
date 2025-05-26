@@ -5,7 +5,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 
 # Przykładowe kąty przegubów PUMA (na początek 3 dla uproszczenia)
-theta = [0, 0, 0]  # stopnie
+theta = [-45, 90, 0, 0]  # stopnie
 base_angle = 0
 hook_angle = 30
 hook_open = True
@@ -26,16 +26,16 @@ def draw_base():
 def draw_arm():
     glPushMatrix()
     glTranslatef(0, 0, BASE_HEIGHT)
-    glRotate(base_angle, 0, 0, 1)
-    draw_link_base(length=1.3, radius=0.2, color=(0.5,0.5,0.5))
-    glTranslatef(0, 0, BASE_HEIGHT+1)
+    glRotate(theta[3], 0, 0, 1)
+    draw_link_base(length=1.4, radius=0.2, color=(0.5,0.5,0.5))
+    glTranslatef(0, 0, BASE_HEIGHT+1.1)
     glRotatef(theta[0], 0, 1, 0)
-    draw_link(length=1.0, radius=0.15, color=(1,0,0))
+    draw_link(length=1.1, radius=0.15, color=(1,0,0))
     glTranslatef(1.0, 0, 0)
     glRotatef(theta[1], 0, 1, 0)
-    draw_link(length=1.0, radius=0.1, color=(0,1,0))
-    if hook_open==True: hook_angle=30
-    else: hook_angle=5
+    draw_link(length=1.1, radius=0.1, color=(0,1,0))
+    #if hook_open==True: hook_angle=30
+    #else: hook_angle=5
     glTranslatef(1.0, 0, 0)
     glRotatef(theta[2], 0, 0, 1)
     draw_hook(hook_angle)
@@ -82,19 +82,20 @@ def draw_link_base(length=1.0, radius=0.07, color=(1,0,0)):
     gluDisk(quadric, 0, radius, 16, 1)  # koniec
     glPopMatrix()
 
-def draw_hook(opening_ang=30.0, length=0.5, radius=0.03):
+def draw_hook(opening_ang=30.0, length=0.5, radius=0.03, spacing=0.07):
+    # Lewa szczęka
     glPushMatrix()
-    glTranslatef(0.0, 0.0, 0.0)
-    glRotatef(opening_ang, 0, 0, 1)  # obrót w lewo
-    glTranslatef(0.0, length / 2, 0.0)  # przesuń wzdłuż szczęki
+    glTranslatef(0.25, spacing-0.2, 0)             # przesuń w lewo
+    glRotatef(opening_ang, 0, 0, 1)          # otwórz w lewo
+    glTranslatef(0.0, length / 2, 0.0)       # przesuń szczękę wzdłuż jej długości
     draw_link(length=length, radius=radius, color=(1, 0, 0))
     glPopMatrix()
 
-    # Szczęka prawa
+    # Prawa szczęka
     glPushMatrix()
-    glTranslatef(0.0, 0.0, 0.0)
-    glRotatef(-opening_ang, 0, 0, 1)  # obrót w prawo
-    glTranslatef(0.0, length / 2, 0.0)  # przesuń wzdłuż szczęki
+    glTranslatef(0, -spacing-0.2, 0)              # przesuń w prawo
+    glRotatef(-opening_ang, 0, 0, 1)         # otwórz w prawo
+    glTranslatef(0.0, length / 2, 0.0)
     draw_link(length=length, radius=radius, color=(1, 0, 0))
     glPopMatrix()
 
@@ -123,9 +124,9 @@ def keyboard(key, x, y):
         theta[3] += 5
     if key == b'v':
         theta[3] -= 5 
-    if (key == b'q' & hook_open==False):
+    if (key == b'q' and hook_open==False):
         hook_open=True
-    if (key == b'q' & hook_open==True):
+    if (key == b'q' and hook_open==True):
         hook_open=False
         
 
