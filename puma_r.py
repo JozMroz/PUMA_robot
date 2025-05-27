@@ -31,14 +31,16 @@ def draw_arm():
     glTranslatef(0, 0, BASE_HEIGHT+1.1)
     glRotatef(theta[0], 0, 1, 0)
     draw_link(length=1.1, radius=0.15, color=(1,0,0))
-    glTranslatef(1.0, 0, 0)
+    glTranslatef(1, 0, 0)
     glRotatef(theta[1], 0, 1, 0)
     draw_link(length=1.1, radius=0.1, color=(0,1,0))
-    #if hook_open==True: hook_angle=30
-    #else: hook_angle=5
-    glTranslatef(1.0, 0, 0)
+    glTranslatef(1, 0, 0)
     glRotatef(theta[2], 0, 0, 1)
-    draw_hook(hook_angle)
+    if hook_open:
+        hook_angle=30
+    else:
+        hook_angle=10
+    draw_hook(opening_ang=hook_angle)
     glPopMatrix()
 
 def display():
@@ -82,21 +84,28 @@ def draw_link_base(length=1.0, radius=0.07, color=(1,0,0)):
     gluDisk(quadric, 0, radius, 16, 1)  # koniec
     glPopMatrix()
 
-def draw_hook(opening_ang=30.0, length=0.5, radius=0.03, spacing=0.07):
-    # Lewa szczęka
+def draw_hook(opening_ang=30.0, length=0.4, radius=0.03, spacing=-0.2, space=0.05):
     glPushMatrix()
-    glTranslatef(0.25, spacing-0.2, 0)             # przesuń w lewo
-    glRotatef(opening_ang, 0, 0, 1)          # otwórz w lewo
-    glTranslatef(0.0, length / 2, 0.0)       # przesuń szczękę wzdłuż jej długości
-    draw_link(length=length, radius=radius, color=(1, 0, 0))
+    glTranslatef(0.1, spacing, 0)                     # Punkt zaczepienia lewej szczęki
+    glRotatef(opening_ang, 0, 0, 1)                   # Otwórz szczękę w lewo
+    glTranslatef(0.0, length / 2, 0.0)                # Przesuń cylinder
+    draw_link(length=length, radius=radius, color=(1, 0, 0))  # Aktywna
+    # Bierna szczęka przyczepiona do końca aktywnej
+    glTranslatef(length, length / 2-0.2, 0.0)
+    glRotatef(-opening_ang, 0, 0, 1) 
+    draw_link(length=0.2, radius=radius, color=(0, 1, 0))   # Bierna
     glPopMatrix()
 
-    # Prawa szczęka
+    # Prawa szczęka aktywna + bierna
     glPushMatrix()
-    glTranslatef(0, -spacing-0.2, 0)              # przesuń w prawo
-    glRotatef(-opening_ang, 0, 0, 1)         # otwórz w prawo
-    glTranslatef(0.0, length / 2, 0.0)
-    draw_link(length=length, radius=radius, color=(1, 0, 0))
+    glTranslatef(0.1, -spacing, 0)                    # Punkt zaczepienia prawej szczęki
+    glRotatef(-opening_ang, 0, 0, 1)                  # Otwórz szczękę w prawo
+    glTranslatef(0.0, -length / 2, 0.0)
+    draw_link(length=length, radius=radius, color=(1, 0, 0))  # Aktywna
+    # Bierna szczęka przyczepiona do końca aktywnej
+    glTranslatef(length, -length / 2+0.2, 0.0)
+    glRotatef(opening_ang, 0, 0, 1) 
+    draw_link(length=0.2, radius=radius, color=(0, 1, 0))   # Bierna
     glPopMatrix()
 
 def draw_joint(radius=0.09):
@@ -106,6 +115,7 @@ def draw_joint(radius=0.09):
     glPopMatrix()
 
 def keyboard(key, x, y):
+    global hook_open
     if key == b'q':
         sys.exit()
     if key == b'a':
@@ -124,9 +134,9 @@ def keyboard(key, x, y):
         theta[3] += 5
     if key == b'v':
         theta[3] -= 5 
-    if (key == b'q' and hook_open==False):
+    if key == b'o':
         hook_open=True
-    if (key == b'q' and hook_open==True):
+    if key == b'l':
         hook_open=False
         
 
