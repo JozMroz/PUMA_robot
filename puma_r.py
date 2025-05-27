@@ -24,10 +24,11 @@ def draw_base():
     glPopMatrix()
 
 def draw_arm():
+    clamp_theta()
     glPushMatrix()
     glTranslatef(0, 0, BASE_HEIGHT)
     glRotate(theta[3], 0, 0, 1)
-    draw_link_base(length=1.4, radius=0.2, color=(0.5,0.5,0.5))
+    draw_link_base(length=1.4, radius=0.2, color=(0,0,1))
     glTranslatef(0, 0, BASE_HEIGHT+1.1)
     glRotatef(theta[0], 0, 1, 0)
     draw_link(length=1.1, radius=0.15, color=(1,0,0))
@@ -83,6 +84,19 @@ def draw_link_base(length=1.0, radius=0.07, color=(1,0,0)):
     glTranslatef(0, 0, length)
     gluDisk(quadric, 0, radius, 16, 1)  # koniec
     glPopMatrix()
+
+def clamp_theta():
+    # Zakresy oparte na PUMA 560
+    limits = [
+        (-180, 20),   # theta[0] - shoulder
+        (-135, 135),   # theta[1] - elbow
+        (-130, 130),   # theta[2] - wrist roll
+        (-180, 180),   # theta[3] - base
+    ]
+    global theta
+    for i in range(min(len(theta), len(limits))):
+        low, high = limits[i]
+        theta[i] = max(min(theta[i], high), low)
 
 def draw_hook(opening_ang=30.0, length=0.4, radius=0.03, spacing=-0.2, space=0.05):
     glPushMatrix()
