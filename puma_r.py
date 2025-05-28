@@ -45,9 +45,11 @@ def draw_arm():
     glPopMatrix()
 
 def display():
+    glClearColor(1.0, 0.5, 0.31, 0)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     gluLookAt(4,4,5, 0,0,0, 0,0,1)  # Ustaw kamerę
+    draw_floor()
     draw_base()   # Dodaj to!
     draw_arm()
     glutSwapBuffers()
@@ -97,6 +99,16 @@ def clamp_theta():
     for i in range(min(len(theta), len(limits))):
         low, high = limits[i]
         theta[i] = max(min(theta[i], high), low)
+
+def draw_floor():
+    glColor3f(0.3, 0.3, 0.3)
+    glBegin(GL_QUADS)
+    glVertex3f(5, 0, 0)
+    glVertex3f(0, 5, 0)
+    glVertex3f(-5, 0, 0)
+    glVertex3f(0, -5, 0)
+    glEnd()
+
 
 def draw_hook(opening_ang=30.0, length=0.4, radius=0.03, spacing=-0.2, space=0.05):
     glPushMatrix()
@@ -169,3 +181,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
