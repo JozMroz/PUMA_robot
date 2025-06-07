@@ -5,7 +5,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 
 # Przykładowe kąty przegubów PUMA (na początek 3 dla uproszczenia)
-theta = [-45, 90, 0, 0]  # stopnie
+theta = [0, -45, 90, 0]  # stopnie
 base_angle = 0
 hook_angle = 30
 hook_open = True
@@ -17,8 +17,8 @@ def draw_base():
     glColor3f(0.6, 0.6, 0.6)
     quadric = gluNewQuadric()
     glTranslatef(0, 0, 0)  # baza stoi na (0,0,0)
-    gluCylinder(quadric, 0.5, 0.3, BASE_HEIGHT, 32, 8)
-    gluDisk(quadric, 0, 0.2, 32, 1)
+    gluCylinder(quadric, 0.5, 0.2, BASE_HEIGHT, 32, 8)
+    gluDisk(quadric, 0, 0.5, 32, 1)
     glTranslatef(0, 0, BASE_HEIGHT)
     gluDisk(quadric, 0, 0.2, 32, 1)
     glPopMatrix()
@@ -26,21 +26,24 @@ def draw_base():
 def draw_arm():
     clamp_theta()
     glPushMatrix()
-    glTranslatef(0, 0, BASE_HEIGHT)
-    glRotate(theta[3], 0, 0, 1)
-    draw_link_base(length=1.4, radius=0.2, color=(0,0,1))
-    glTranslatef(0, 0, BASE_HEIGHT+1.1)
-    glRotatef(theta[0], 0, 1, 0)
-    draw_link(length=1.1, radius=0.15, color=(1,0,0))
-    glTranslatef(1, 0, 0)
+    pos_base = (0, 0, BASE_HEIGHT)
+    glTranslatef(*pos_base)
+    glRotate(theta[0], 0, 0, 1)
+    pos_seg1 = (0, 0, BASE_HEIGHT+1.1)
+    draw_link_base(length=1.1+BASE_HEIGHT, radius=0.2, color=(0,0,1))
+    glTranslatef(*pos_seg1)
+    draw_joint(0.2)
     glRotatef(theta[1], 0, 1, 0)
+    draw_link(length=1.1, radius=0.15, color=(1,0,0))
+    pos_seg2 = (1.1, 0, 0)
+    glTranslatef(*pos_seg2)
+    draw_joint(0.15)
+    glRotatef(theta[2], 0, 1, 0)
     draw_link(length=1.1, radius=0.1, color=(0,1,0))
-    glTranslatef(1, 0, 0)
-    glRotatef(theta[2], 0, 0, 1)
-    if hook_open:
-        hook_angle=30
-    else:
-        hook_angle=10
+    pos_seg3 = (1.1, 0, 0)
+    glTranslatef(*pos_seg3)
+    draw_joint(0.1)
+    glRotatef(theta[3], 0, 0, 1)
     draw_hook(opening_ang=hook_angle)
     glPopMatrix()
 
@@ -79,21 +82,20 @@ def draw_link_base(length=1.0, radius=0.07, color=(1,0,0)):
     quadric = gluNewQuadric()
     glPushMatrix()
     # Ustaw walec wzdłuż osi X (domyślnie idzie wzdłuż Z)
-    glRotatef(0, 0, 1, 0)
     gluCylinder(quadric, radius, radius, length, 16, 4)
     # Końcówki (opcjonalnie, by były zakryte)
     gluDisk(quadric, 0, radius, 16, 1)  # początek
-    glTranslatef(0, 0, length)
+    #glTranslatef(0, 0, length)
     gluDisk(quadric, 0, radius, 16, 1)  # koniec
     glPopMatrix()
 
 def clamp_theta():
     # Zakresy oparte na PUMA 560
     limits = [
-        (-180, 20),   # theta[0] - shoulder
-        (-135, 135),   # theta[1] - elbow
-        (-130, 130),   # theta[2] - wrist roll
-        (-180, 180),   # theta[3] - base
+        (-180, 180),   # theta[0] - base
+        (-180, 20),   # theta[1] - shoulder
+        (-135, 135),   # theta[2] - elbow
+        (-130, 130),   # theta[3] - wrist roll
     ]
     global theta
     for i in range(min(len(theta), len(limits))):
@@ -110,38 +112,43 @@ def draw_floor():
     glEnd()
 
 
-def draw_hook(opening_ang=30.0, length=0.4, radius=0.03, spacing=-0.2, space=0.05):
-    glPushMatrix()
-    glTranslatef(0.1, spacing, 0)                     # Punkt zaczepienia lewej szczęki
-    glRotatef(opening_ang, 0, 0, 1)                   # Otwórz szczękę w lewo
-    glTranslatef(0.0, length / 2, 0.0)                # Przesuń cylinder
-    draw_link(length=length, radius=radius, color=(1, 0, 0))  # Aktywna
-    # Bierna szczęka przyczepiona do końca aktywnej
-    glTranslatef(length, length / 2-0.2, 0.0)
-    glRotatef(-opening_ang, 0, 0, 1) 
-    draw_link(length=0.2, radius=radius, color=(0, 1, 0))   # Bierna
-    glPopMatrix()
+def draw_hook(opening_ang=30.0, length=0.4, radius=0.03, spacing=-0.15, end_length=0.2):
+    """
+    Rysuje lewą i prawą szczękę z nieruchomym punktem zaczepienia niezależnie od kąta.
+    """
+    for direction in [+1, -1]:  # +1 = lewa, -1 = prawa
+        glPushMatrix()
 
-    # Prawa szczęka aktywna + bierna
-    glPushMatrix()
-    glTranslatef(0.1, -spacing, 0)                    # Punkt zaczepienia prawej szczęki
-    glRotatef(-opening_ang, 0, 0, 1)                  # Otwórz szczękę w prawo
-    glTranslatef(0.0, -length / 2, 0.0)
-    draw_link(length=length, radius=radius, color=(1, 0, 0))  # Aktywna
-    # Bierna szczęka przyczepiona do końca aktywnej
-    glTranslatef(length, -length / 2+0.2, 0.0)
-    glRotatef(opening_ang, 0, 0, 1) 
-    draw_link(length=0.2, radius=radius, color=(0, 1, 0))   # Bierna
-    glPopMatrix()
+        # --- Rysuj szczękę zaczepioną na (0, ±spacing, 0) --- #
+        glTranslatef(0, direction * spacing, 0)               # punkt zaczepienia (Y)
+        glRotatef(direction * opening_ang, 0, 0, 1)            # obrót wokół tego punktu
+
+        # Przesunięcie do środka aktywnej szczęki (w Y)
+        glTranslatef(0, direction * length / 2, 0)
+        draw_link(length=length, radius=radius, color=(1, 0, 0))  # aktywna
+
+        # Przesunięcie do środka biernej szczęki (w Y)
+        glTranslatef(end_length+length/2, 0, 0)
+        glRotatef(-opening_ang*direction, 0, 0, 1)
+        draw_joint(0.05) 
+        draw_link(length=end_length, radius=radius, color=(0, 1, 0))  # bierna
+
+        # Dopiero teraz przesunięcie całego haka do przodu (X)
+        glPopMatrix()
+
+    # Całość przesuwamy do przodu dopiero teraz (po lewej i prawej)
+    glTranslatef(0.1, 0, 0)
+    
 
 def draw_joint(radius=0.09):
-    glColor3f(0.2,0.2,0.2)
+    glColor3f(1,1,0)
     glPushMatrix()
     glutSolidSphere(radius, 16, 8)
     glPopMatrix()
 
 def keyboard(key, x, y):
     global hook_open
+    global hook_angle
     if key == b'q':
         sys.exit()
     if key == b'a':
@@ -157,13 +164,13 @@ def keyboard(key, x, y):
     if key == b'c':
         theta[2] -= 5
     if key == b'f':
-        theta[3] += 5
+        theta[3] += 5 
     if key == b'v':
         theta[3] -= 5 
     if key == b'o':
-        hook_open=True
-    if key == b'l':
-        hook_open=False
+        hook_open = not hook_open
+        hook_angle = 30.0 if hook_open else 10.0
+
         
 
     glutPostRedisplay()
