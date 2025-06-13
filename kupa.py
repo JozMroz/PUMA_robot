@@ -24,31 +24,47 @@ cam_dist = 6.0   # odległość od środka
 theta_anim_start = None
 theta_anim_target = None
 anim_step = 0
-anim_total_steps = 100
+anim_total_steps = 1000
 
-cube_offset_local = np.array([0.2, 0, 1])  # lokalna pozycja kostki względem chwytaka
+cube_offset_local = np.array([0.0, 0, 0])  # lokalna pozycja kostki względem chwytaka
 # Stan robota
 theta = [0, 0, 0, 0, 0, 0]
 
-JOINT_LIMITS_MIN = np.array([-160, -90, -60, -180, -90, -180])  # deg
-JOINT_LIMITS_MAX = np.array([ 160,  45,  90,  180,  90,  180])  # deg
+JOINT_LIMITS_MIN = np.array([-180, -180, -180, -180, -180, -180])
+JOINT_LIMITS_MAX = np.array([ 180,  180,  180,  180,  180,  180])
 
 hook_angle = 30
 hook_open = True
 manual_tcp_offset = np.array([0.0, 0.0, 0.0])  # przesunięcie TCP przez użytkownika
-TCP_GRIP_OFFSET = np.array([0.5, 0.0, 1.0])
+TCP_GRIP_OFFSET = np.array([0.0, 0.0, 0.0])
 BASE_HEIGHT = 0.3
 
-# Łańcuch kinematyczny
 puma_chain = Chain(name='puma_560', links=[
     OriginLink(),
-    URDFLink("joint_1", [0, 0, 0.6718], [0, 0, 0], [0, 0, 1]),        # obrót podstawy
-    URDFLink("joint_2", [0.4318, 0, 0], [0, 0, 0], [0, 1, 0]),        # ramię (shoulder)
-    URDFLink("joint_3", [-0.0203, 0, 0.15005], [0, 0, 0], [0, 1, 0]), # łokieć
-    URDFLink("joint_4", [0, 0, 0.4318], [0, 0, 0], [1, 0, 0]),        # roll
-    URDFLink("joint_5", [0, 0, 0], [0, 0, 0], [0, 1, 0]),             # pitch
-    URDFLink("joint_6", [0, 0, 0], [0, 0, 0], [1, 0, 0])              # roll
+    
+    # Joint 1 - obrót podstawy (Z)
+    URDFLink("joint_1", [0, 0, BASE_HEIGHT], [0, 0, 0], [0, 0, 1]),
+    
+    # Joint 2 - shoulder (Y)
+    URDFLink("joint_2", [0, 0, 0.5], [0, 0, 0], [0, 1, 0]),
+    
+    # Joint 3 - elbow (Y)
+    URDFLink("joint_3", [0, 0, 1.1], [0, 0, 0], [0, 1, 0]),
+    
+    # Joint 4 - roll (X)
+    URDFLink("joint_4", [0, 0, 0.9], [0, 0, 0], [1, 0, 0]),
+    
+    # Joint 5 - pitch (Y)
+    URDFLink("joint_5", [0, 0, 0.5], [0, 0, 0], [0, 1, 0]),
+    
+    # Joint 6 - yaw (Z)
+    URDFLink("joint_6", [0, 0, 0.2], [0, 0, 0], [0, 0, 1]),
 ])
+
+def print_tcp_position():
+    tcp_frame = puma_chain.forward_kinematics([0] + list(np.radians(theta)))
+    pos = tcp_frame[:3, 3]
+    print(f"📍 Pozycja TCP: x={pos[0]:.3f}, y={pos[1]:.3f}, z={pos[2]:.3f}")
 
 def draw_cube(pos, size=0.1):
     if not cube_visible:
@@ -111,7 +127,7 @@ def draw_arm():
     
     # SEGMENT 1
     glTranslatef(0, 0.15, 0)
-    draw_joint(0.2)
+    draw_joint2(0.2)
     glTranslatef(0, 0.15, 0)
     glRotatef(theta[1], 0, 1, 0)
     length2 = 1.1
@@ -122,7 +138,7 @@ def draw_arm():
     
     # SEGMENT 3
     glTranslatef(0, 0.1, 0)
-    draw_joint(0.15)
+    draw_joint2(0.15)
     glTranslatef(0, 0.1, 0)
     glRotatef(theta[2], 0, 1, 0)
     length3 = 0.9
@@ -181,6 +197,27 @@ def draw_joint(radius=0.09):
     glutSolidSphere(radius, 16, 8)
     glPopMatrix()
 
+def draw_joint2(radius=0.07, height=0.04):
+    glColor3f(1, 1, 0)  # żółty
+
+    quadric = gluNewQuadric()
+    glPushMatrix()
+
+    # Orientacja w osi Z
+    glRotatef(90, 1, 0, 0)
+
+    # Denko dolne
+    gluDisk(quadric, 0, radius, 16, 1)
+
+    # Główna część cylindra
+    gluCylinder(quadric, radius, radius, height, 16, 4)
+
+    # Denko górne
+    glTranslatef(0, 0, height)
+    gluDisk(quadric, 0, radius, 16, 1)
+
+    glPopMatrix()
+
 def draw_fingers(opening_ang=30.0, length=0.4, radius=0.03, spacing=0.08, end_length=0.2):
     for direction in [+1, -1]:
         glPushMatrix()
@@ -196,20 +233,25 @@ def draw_fingers(opening_ang=30.0, length=0.4, radius=0.03, spacing=0.08, end_le
         glPopMatrix()
 
 
-def draw_hook(opening_ang=30.0, length=0.4, radius=0.03, spacing=-0.2, end_length=0.2):
+def draw_hook(opening_ang=30.0, length=0.3, radius=0.03, spacing=0.0, end_length=0.2):
     glPushMatrix()
-    glRotatef(90, 0, 1, 0)  # Obracamy, żeby chwytak był wzdłuż osi Z
+    glRotatef(90, 0, 1, 0)  # Ustawienie haka wzdłuż osi Z
 
     for direction in [+1, -1]:
         glPushMatrix()
         glTranslatef(0, direction * spacing, 0)
+
+        # ROTACJA tylko czerwonej części
         glRotatef(direction * opening_ang, 1, 0, 0)
-        glTranslatef(0, direction * length / 2, 0)
-        draw_link(length=length, radius=radius, color=(1, 0, 0))
-        glTranslatef(end_length + length / 2, 0, 0)
-        glRotatef(-opening_ang * direction, 0, 0, 1)
+        draw_link(length=length, radius=radius, color=(1, 0, 0))  
+        glTranslatef(0, 0, end_length + length / 2)
+
+        # ZRESETUJ rotację przed rysowaniem zielonej części
+        glPushMatrix()
+        glRotatef(-direction * opening_ang, 1, 0, 0)  # Odwrócenie poprzedniej rotacji
         draw_joint(0.05)
-        draw_link(length=end_length, radius=radius, color=(0, 1, 0))
+        draw_link(length=end_length, radius=radius, color=(0, 1, 0)) 
+        glPopMatrix()
         glPopMatrix()
 
     glPopMatrix()
@@ -263,7 +305,7 @@ def reshape(w, h):
     gluPerspective(70, w/h, 0.1, 100)
     glMatrixMode(GL_MODELVIEW)
 
-def start_animation_to_target(frame, steps=100):
+def start_animation_to_target(frame, steps=200):
     global theta_anim_start, theta_anim_target, anim_step, anim_total_steps
 
     anim_total_steps = steps
@@ -386,8 +428,14 @@ def keyboard(key, x, y, frame):
         try:
             coords = input("Podaj współrzędne x y z (oddzielone spacjami): ").strip()
             x, y, z = map(float, coords.split())
-            frame[:3, 3] = [x, y, z - 1.0]
-            frame[:3, :3] = np.eye(3)
+
+            # Poprawna macierz transformacji TCP uwzględniająca przesunięcie końcówki chwytaka
+            frame = get_tcp_from_gripper_target(
+                gripper_pos=np.array([x, y, z]),
+                orientation=np.eye(3),
+                offset_vector=TCP_GRIP_OFFSET
+            )
+
             start_animation_to_target(frame)
         except Exception as ex:
             print("❌ Błąd wprowadzania współrzędnych:", ex)
@@ -404,7 +452,7 @@ def keyboard(key, x, y, frame):
             gripper_orientation = np.array([
                 [1,  0,  0],
                 [0, 1,  0],
-                [0,  0, -1]
+                [0,  0, 1]
             ])
 
             # Pozycja TCP, tak by końcówka chwytaka była idealnie w centrum kostki
@@ -419,6 +467,9 @@ def keyboard(key, x, y, frame):
 
         except Exception as ex:
             print("❌ Błąd ustawiania TCP do dokładnego chwytu:", ex)
+    
+    elif key == b'f':
+        print_tcp_position()
 
     # Kamera – obrót i zoom
     elif key == b'a': cam_yaw -= 5
@@ -437,6 +488,7 @@ def get_tcp_from_gripper_target(gripper_pos, orientation=np.eye(3), offset_vecto
     tcp_frame = np.eye(4)
     tcp_frame[:3, :3] = orientation
     tcp_frame[:3, 3] = gripper_pos - orientation @ np.array(offset_vector)
+    print(f"🎯 Cel IK: {tcp_frame[:3, 3]}")
     return tcp_frame
 
 def update_cube_position_from_tcp():
