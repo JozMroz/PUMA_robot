@@ -7,7 +7,7 @@ Symulator ramienia robota <b>PUMA</b> z sześcioma stopniami swobody, zbudowany 
 
 ---
 
-## ✨ Funkcje
+##  Funkcje
 
 -  <b>Płynna animacja</b> ruchów robota między pozycjami
 -  <b>Inverse Kinematics</b> – odwrotna kinematyka przy użyciu <code>ikpy</code>
@@ -15,7 +15,7 @@ Symulator ramienia robota <b>PUMA</b> z sześcioma stopniami swobody, zbudowany 
 -  <b>Kamera sferyczna</b> – sterowanie widokiem (obrót, zoom)
 -  <b>Interaktywna kostka</b> – można ją chwytać, podnosić i upuszczać
 -  <b>Detekcja kolizji</b> – zapobiega wchodzeniu robota pod podłogę
-- 🌫 <b>Oświetlenie i mgła</b> – dla lepszego wyglądu 3D
+-  <b>Oświetlenie i mgła</b> – dla lepszego wyglądu 3D
 
 ---
 
@@ -38,7 +38,7 @@ Symulator ramienia robota <b>PUMA</b> z sześcioma stopniami swobody, zbudowany 
 
 ---
 
-## ⚙️ Wymagania
+##  Wymagania
 
 - Python 3.x  
 - Biblioteki:
