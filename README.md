@@ -1,4 +1,4 @@
-<h1 align="center">Symulator Robota PUMA o 6 stopniach swobodyF</h1>
+<h1 align="center">Symulator Robota PUMA o 6 stopniach swobody</h1>
 
 <p align="center">
 Symulator ramienia robota <b>PUMA</b> z sześcioma stopniami swobody, zbudowany w Pythonie z użyciem <b>PyOpenGL</b> i <b>ikpy</b>.
