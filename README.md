@@ -35,7 +35,7 @@ Symulator ramienia robota <b>PUMA</b> z sześcioma stopniami swobody, zbudowany 
 | <code>t/y</code>  | obrót stawu 6 |
 | <code>o</code>    | otwieranie/zamykanie chwytaka |
 | <code>g</code>    | złap/upuść kostkę |
-| <code>k</code>, <code>q</code> | automatyczne podejście i chwytanie kostki |
+| <code>k</code>    | automatyczne podejście i chwytanie kostki |
 | <code>e</code>    | ręczne wprowadzenie współrzędnych celu |
 | <code>f</code>    | wyświetlenie pozycji TCP |
 | <code>a/d/w/s/+/-</code> | obrót/zoom kamery |
