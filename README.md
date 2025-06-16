@@ -7,6 +7,10 @@ Symulator ramienia robota <b>PUMA</b> z sześcioma stopniami swobody, zbudowany 
 
 ---
 
+<p align="center">
+  <img src="robot_ss.png" width="600" alt="Widok robota w symulacji">
+</p>
+
 ##  Funkcje
 
 -  <b>Płynna animacja</b> ruchów robota między pozycjami
